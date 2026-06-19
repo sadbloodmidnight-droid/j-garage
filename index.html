@@ -1410,6 +1410,37 @@ window.firebaseApp = initializeApp(firebaseConfig);
 window.db = getFirestore(window.firebaseApp);
 
 console.log("Firebase Connected!");
+    window.saveToCloud = async function() {
+  try {
+    await setDoc(
+      doc(window.db, "garage", "main"),
+      state
+    );
+
+    console.log("Cloud Save OK");
+  } catch (e) {
+    console.error("Cloud Save Error", e);
+  }
+};
+
+window.loadFromCloud = async function() {
+  try {
+    const snap = await getDoc(
+      doc(window.db, "garage", "main")
+    );
+
+    if (snap.exists()) {
+      Object.assign(state, snap.data());
+      render();
+
+      console.log("Cloud Load OK");
+    } else {
+      console.log("Cloud Data Not Found");
+    }
+  } catch (e) {
+    console.error("Cloud Load Error", e);
+  }
+};
 </script>
 </body>
 </html>
