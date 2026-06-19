@@ -1441,6 +1441,60 @@ window.loadFromCloud = async function() {
     console.error("Cloud Load Error", e);
   }
 };
+    <script type="module">
+import {
+  collection,
+  addDoc,
+  getDocs
+} from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+window.saveToCloud = async function () {
+  try {
+    const data = JSON.parse(localStorage.getItem("j-garage-manager-v2"));
+
+    await addDoc(
+      collection(window.db, "garageData"),
+      {
+        data: data,
+        savedAt: new Date().toISOString()
+      }
+    );
+
+    alert("クラウド保存完了！");
+  } catch (err) {
+    console.error(err);
+    alert("保存失敗");
+  }
+};
+
+window.loadFromCloud = async function () {
+  try {
+    const snapshot = await getDocs(
+      collection(window.db, "garageData")
+    );
+
+    const docs = snapshot.docs;
+
+    if (!docs.length) {
+      alert("クラウドデータなし");
+      return;
+    }
+
+    const latest = docs[docs.length - 1].data();
+
+    localStorage.setItem(
+      "j-garage-manager-v2",
+      JSON.stringify(latest.data)
+    );
+
+    location.reload();
+
+  } catch (err) {
+    console.error(err);
+    alert("読込失敗");
+  }
+};
+</script>
 </script>
 </body>
 </html>
