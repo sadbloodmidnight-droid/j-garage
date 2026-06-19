@@ -1439,18 +1439,24 @@ window.loadFromCloud = async function() {
     );
 
     if (snap.exists()) {
-      Object.assign(state, snap.data());
-      render();
+      state = snap.data();
 
-      console.log("Cloud Load OK");
+      localStorage.setItem(
+        "j-garage-manager-v2",
+        JSON.stringify(state)
+      );
+
+      alert("クラウド読込完了！");
+      location.reload();
     } else {
+      alert("クラウドデータが見つからんで");
       console.log("Cloud Data Not Found");
     }
   } catch (e) {
     console.error("Cloud Load Error", e);
+    alert("クラウド読込失敗");
   }
 };
-
 
 
 
