@@ -1439,8 +1439,11 @@ window.loadFromCloud = async function() {
     );
 
     if (snap.exists()) {
-      state = snap.data();
+const cloudState = snap.data();
 
+state.bikes = Array.isArray(cloudState.bikes) ? cloudState.bikes : [];
+state.logs = Array.isArray(cloudState.logs) ? cloudState.logs : [];
+state.customTypes = Array.isArray(cloudState.customTypes) ? cloudState.customTypes : [];
       localStorage.setItem(
         "j-garage-manager-v2",
         JSON.stringify(state)
