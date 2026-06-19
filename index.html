@@ -1394,5 +1394,23 @@
 
     rerender();
   </script>
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getFirestore } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyC5h7Nt8mjGjvVZjz-kAvAlCtwRPds3QlQ",
+  authDomain: "j-garage-manager.firebaseapp.com",
+  projectId: "j-garage-manager",
+  storageBucket: "j-garage-manager.firebasestorage.app",
+  messagingSenderId: "549106996959",
+  appId: "1:549106996959:web:bb3ebfe464da40f8ca7b6a"
+};
+
+window.firebaseApp = initializeApp(firebaseConfig);
+window.db = getFirestore(window.firebaseApp);
+
+console.log("Firebase Connected!");
+</script>
 </body>
 </html>
