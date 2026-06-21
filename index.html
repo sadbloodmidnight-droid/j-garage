@@ -1,0 +1,1573 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>J Garage Manager</title>
+  <meta name="theme-color" content="#111111" />
+  <link rel="manifest" href="manifest.json" />
+  <link rel="icon" type="image/png" href="icon.png" />
+  <link rel="apple-touch-icon" href="icon-192.png" />
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #181c23;
+      --panel-2: #202632;
+      --text: #f2f4f8;
+      --muted: #aeb6c2;
+      --accent: #ffd54a;
+      --danger: #ff6b6b;
+      --ok: #56d364;
+      --border: #2a3140;
+      --shadow: 0 10px 30px rgba(0,0,0,.3);
+      --radius: 18px;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      font-family: "Yu Gothic", "Meiryo", system-ui, sans-serif;
+      background: linear-gradient(160deg, #0b0d11 0%, #131821 100%);
+      color: var(--text);
+    }
+
+    .wrap {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px;
+    }
+
+    .hero {
+      background: linear-gradient(135deg, rgba(255,213,74,.15), rgba(255,255,255,.03));
+      border: 1px solid var(--border);
+      border-radius: 28px;
+      padding: 28px;
+      box-shadow: var(--shadow);
+      margin-bottom: 22px;
+    }
+
+    .hero-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 16px;
+    }
+
+    .hero-actions {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 8px;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .hero-actions button {
+      width: auto;
+      white-space: nowrap;
+    }
+
+    .settings-btn {
+      min-width: 120px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: clamp(28px, 4vw, 44px);
+      letter-spacing: .02em;
+    }
+
+    .sub {
+      color: var(--muted);
+      margin: 0;
+      line-height: 1.7;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 20px;
+    }
+
+    .panel {
+      background: rgba(24,28,35,.9);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 18px;
+      box-shadow: var(--shadow);
+    }
+
+    .panel h2 {
+      margin: 0 0 14px;
+      font-size: 22px;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .full { grid-column: 1 / -1; }
+
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea, button {
+      width: 100%;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: var(--panel-2);
+      color: var(--text);
+      padding: 12px 14px;
+      font: inherit;
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    button {
+      cursor: pointer;
+      font-weight: 700;
+      transition: transform .08s ease, opacity .15s ease, background .15s ease;
+    }
+
+    button:hover { opacity: .95; }
+    button:active { transform: translateY(1px); }
+
+    .btn-primary {
+      background: var(--accent);
+      color: #111;
+      border-color: transparent;
+    }
+
+    .btn-secondary {
+      background: #2b3342;
+    }
+
+    .btn-danger {
+      background: rgba(255,107,107,.12);
+      color: #ffd0d0;
+      border-color: rgba(255,107,107,.25);
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1fr 180px 180px;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .toolbar-single {
+      display: grid;
+      grid-template-columns: minmax(220px, 320px);
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .bike-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.03), rgba(255,255,255,.01));
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 16px;
+      user-select: none;
+    }
+
+    .bike-card.status-ok {
+      border-color: rgba(86, 211, 100, .35);
+      box-shadow: 0 0 0 1px rgba(86, 211, 100, .08), var(--shadow);
+    }
+
+    .bike-card.status-soon {
+      border-color: rgba(255, 213, 74, .38);
+      box-shadow: 0 0 0 1px rgba(255, 213, 74, .10), var(--shadow);
+    }
+
+    .bike-card.status-over {
+      border-color: rgba(255, 107, 107, .45);
+      box-shadow: 0 0 0 1px rgba(255, 107, 107, .12), var(--shadow);
+    }
+
+    .bike-card.dragging {
+      opacity: .45;
+      transform: scale(.98);
+    }
+
+    .bike-card.drag-over {
+      outline: 2px dashed rgba(255,213,74,.7);
+      outline-offset: 3px;
+    }
+
+    .bike-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      align-items: start;
+      margin-bottom: 10px;
+    }
+
+    .bike-name {
+      font-size: 20px;
+      font-weight: 800;
+    }
+
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,213,74,.12);
+      color: #ffe27e;
+      border: 1px solid rgba(255,213,74,.2);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 12px;
+      margin: 2px 6px 0 0;
+      flex-wrap: wrap;
+    }
+
+    .drag-chip {
+      cursor: grab;
+    }
+
+    .muted { color: var(--muted); }
+
+    .stat-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin: 12px 0;
+    }
+
+    .stat {
+      background: #171b23;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 10px;
+    }
+
+    .stat.mileage-editing {
+      grid-column: 1 / -1;
+    }
+
+    .stat .k {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .stat .v {
+      font-size: 18px;
+      font-weight: 800;
+      margin-top: 4px;
+    }
+
+    .mileage-edit-button {
+      width: auto;
+      min-height: 0;
+      padding: 0 0 2px;
+      border: none;
+      border-bottom: 1px dashed rgba(255,255,255,.35);
+      border-radius: 0;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+    }
+
+    .mileage-edit-button:hover,
+    .mileage-edit-button:focus-visible {
+      color: var(--accent);
+      border-bottom-color: var(--accent);
+      outline: none;
+    }
+
+    .mileage-edit-row {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      width: 100%;
+    }
+
+    .mileage-edit-input {
+      width: min(220px, 100%);
+      min-height: 0;
+      padding: 8px 10px;
+      font-size: 18px;
+      font-weight: 800;
+      box-sizing: border-box;
+      user-select: text;
+    }
+
+    .mileage-unit {
+      color: var(--muted);
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    .actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-top: 12px;
+    }
+
+    .actions > * { width: auto; }
+
+    .status-badge {
+      display: inline-block;
+      margin-top: 8px;
+      margin-right: 6px;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status-badge.ok {
+      background: rgba(86, 211, 100, .12);
+      color: #9ff0a8;
+      border: 1px solid rgba(86, 211, 100, .25);
+    }
+
+    .status-badge.soon {
+      background: rgba(255, 213, 74, .12);
+      color: #ffe27e;
+      border: 1px solid rgba(255, 213, 74, .25);
+    }
+
+    .status-badge.over {
+      background: rgba(255, 107, 107, .12);
+      color: #ffb0b0;
+      border: 1px solid rgba(255, 107, 107, .25);
+    }
+
+    .schedule-box {
+      margin-top: 10px;
+      padding: 10px 12px;
+      background: #171b23;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      line-height: 1.7;
+      font-size: 14px;
+    }
+
+    .memo-preview {
+      line-height: 1.6;
+      min-height: 48px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      max-height: 7.5em;
+      overflow: auto;
+    }
+
+    .log-list {
+      display: grid;
+      gap: 10px;
+      max-height: 430px;
+      overflow: auto;
+    }
+
+    .log-item {
+      background: #171b23;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 12px;
+    }
+
+    .log-head {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .danger-text { color: #ff9e9e; }
+    .ok-text { color: #9ff0a8; }
+
+    .footer-note {
+      margin-top: 18px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    .empty {
+      padding: 24px;
+      border: 1px dashed var(--border);
+      border-radius: 16px;
+      color: var(--muted);
+      text-align: center;
+      background: rgba(255,255,255,.02);
+    }
+
+    .hidden { display: none !important; }
+
+    .preset-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+
+    .chip-delete {
+      width: auto;
+      padding: 4px 8px;
+      font-size: 12px;
+      line-height: 1;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+      z-index: 9999;
+    }
+
+    .modal.hidden { display: none !important; }
+
+    .modal-card {
+      width: min(760px, 100%);
+      max-height: 90vh;
+      overflow: auto;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      padding: 20px;
+      box-shadow: var(--shadow);
+    }
+
+    .modal-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 18px;
+    }
+
+    .modal-close {
+      width: auto;
+      padding: 10px 14px;
+    }
+
+    .memo-modal-textarea {
+      min-height: 240px;
+      resize: vertical;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+      margin-top: 14px;
+      flex-wrap: wrap;
+    }
+
+    .modal-actions button { width: auto; }
+
+
+
+    .file-input-hidden {
+      display: none;
+    }
+
+    .mini-note {
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.7;
+      margin-top: 8px;
+    }
+
+    @media (max-width: 920px) {
+      .toolbar, .toolbar-single, .form-grid { grid-template-columns: 1fr; }
+      .hero-row { flex-direction: column; align-items: stretch; }
+      .hero-actions { justify-content: flex-start; }
+      .stat-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <section class="hero hero-row">
+      <div>
+        <h1>🏍️ J Garage Manager</h1>
+        <p class="sub">走行距離、オイル交換、パーツ交換、メモをまとめる自分用ガレージ管理ページ。ブラウザ保存対応やから、ちょっとした記録には十分使える。地味に便利で、妙にニヤけるやつ。</p>
+      </div>
+      <div class="hero-actions">
+        <button class="btn-secondary settings-btn" id="settingsBtn" type="button">⚙️ 設定</button>
+<button class="btn-secondary"
+onclick="window.saveToCloud()">
+☁️ クラウド保存
+</button>
+
+<button class="btn-secondary"
+onclick="window.loadFromCloud()">
+☁️ クラウド読込
+</button>
+      </div>
+    </section>
+
+    <section class="panel" style="margin-top:20px;">
+      <h2>車両一覧</h2>
+      <div class="toolbar">
+        <input id="searchInput" placeholder="車両名やメモを検索" />
+        <select id="sortSelect">
+          <option value="custom">並び順: 手動</option>
+          <option value="name">並び順: 名前</option>
+          <option value="mileage">並び順: 走行距離</option>
+          <option value="oilSoon">並び順: オイル交換近い順</option>
+        </select>
+        <button class="btn-danger" id="resetBtn" type="button">全データ削除</button>
+      </div>
+      <div id="bikeCards" class="cards"></div>
+    </section>
+
+    <div class="grid" style="margin-top:20px;">
+      <section class="panel">
+        <h2>整備ログを追加</h2>
+        <form id="logForm" class="form-grid">
+          <div class="full">
+            <label for="logBike">対象車両</label>
+            <select id="logBike" required></select>
+          </div>
+          <div>
+            <label for="logDate">日付</label>
+            <input id="logDate" type="date" required />
+          </div>
+          <div>
+            <label for="logMileage">その時の距離 (km)</label>
+            <input id="logMileage" type="number" min="0" step="1" placeholder="例: 13100" />
+          </div>
+          <div>
+            <label for="logType">作業内容</label>
+            <select id="logType"></select>
+          </div>
+
+          <div class="full hidden" id="customTypeWrap">
+            <label for="customLogType">整備項目名</label>
+            <input id="customLogType" placeholder="例: ブレーキフルード交換" />
+          </div>
+
+          <div class="full">
+            <label for="logNote">内容メモ</label>
+            <textarea id="logNote" placeholder="使ったオイル、交換パーツ、気づいたこと"></textarea>
+          </div>
+          <div class="full actions">
+            <button class="btn-primary" type="submit">ログを保存する</button>
+            <button class="btn-secondary" type="button" id="exportBtn">JSONでバックアップ</button>
+          </div>
+        </form>
+      </section>
+    </div>
+
+    <section class="panel" style="margin-top:20px;">
+      <h2>最近の整備ログ</h2>
+      <div class="toolbar-single">
+        <select id="logFilterBike"></select>
+      </div>
+      <div id="logList" class="log-list"></div>
+    </section>
+
+    <p class="footer-note">保存先はこのブラウザの localStorage。ブラウザ消したりPC変えたら飛ぶことあるから、大事なんはバックアップしとき。そこ雑にすると泣くで。</p>
+  </div>
+
+  <div id="settingsModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2>⚙️ 設定</h2>
+        <button class="btn-danger modal-close" id="closeSettingsBtn" type="button">閉じる</button>
+      </div>
+
+      <div class="panel" style="margin:0; box-shadow:none; background:transparent; border:none; padding:0;">
+        <h2>車両を追加</h2>
+        <form id="bikeForm" class="form-grid">
+          <div>
+            <label for="bikeName">車両名</label>
+            <input id="bikeName" required placeholder="例: Z1000" />
+          </div>
+          <div>
+            <label for="bikeType">カテゴリ</label>
+            <select id="bikeType">
+              <option>バイク</option>
+              <option>車</option>
+              <option>その他</option>
+            </select>
+          </div>
+          <div>
+            <label for="bikeMileage">現在走行距離 (km)</label>
+            <input id="bikeMileage" type="number" min="0" step="1" placeholder="例: 12800" />
+          </div>
+          <div>
+            <label for="bikeOil">前回オイル交換距離 (km)</label>
+            <input id="bikeOil" type="number" min="0" step="1" placeholder="例: 12000" />
+          </div>
+          <div class="full">
+            <label for="bikeMemo">メモ</label>
+            <textarea id="bikeMemo" placeholder="仕様、気になる症状、次やる作業など"></textarea>
+          </div>
+          <div class="full actions">
+            <button class="btn-primary" type="submit">車両を登録する</button>
+            <button class="btn-secondary" type="button" id="sampleBtn">サンプル車両を入れる</button>
+          </div>
+        </form>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 22px 0;">
+
+        <div>
+          <h2>よく使う整備項目</h2>
+          <div class="form-grid">
+            <div class="full">
+              <label for="presetTypeInput">整備項目名</label>
+              <input id="presetTypeInput" placeholder="例: ブレーキフルード交換" />
+            </div>
+            <div class="full actions">
+              <button class="btn-secondary" type="button" id="addPresetTypeBtn">項目を追加</button>
+            </div>
+          </div>
+
+          <div id="presetTypeList" class="preset-list"></div>
+        </div>
+
+        <hr style="border: none; border-top: 1px solid var(--border); margin: 22px 0;">
+
+        <div>
+          <h2>バックアップ / 復元</h2>
+          <p class="mini-note">JSONで保存したデータを復元できるで。復元すると今のデータは上書きされるから、今の状態も必要なら先にバックアップしとき。</p>
+          <input class="file-input-hidden" id="importFile" type="file" accept="application/json,.json" />
+          <div class="actions">
+            <button class="btn-secondary" type="button" id="importBtn">JSONをインポート</button>
+            <button class="btn-secondary" type="button" id="installHelpBtn">PWAメモ</button>
+          </div>
+          <p class="mini-note" id="pwaStatus">PWA対応: 準備中</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="memoModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="memoModalTitle">車両メモ編集</h2>
+        <button class="btn-danger modal-close" id="closeMemoModalBtn" type="button">閉じる</button>
+      </div>
+
+      <div>
+        <label for="memoModalTextarea">メモ内容</label>
+        <textarea id="memoModalTextarea" class="memo-modal-textarea" placeholder="仕様、気になる症状、次やる作業など"></textarea>
+      </div>
+
+      <div class="modal-actions">
+        <button class="btn-secondary" type="button" id="clearMemoBtn">空にする</button>
+        <button class="btn-primary" type="button" id="saveMemoBtn">保存する</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="bikeEditModal" class="modal hidden">
+    <div class="modal-card">
+      <div class="modal-head">
+        <h2 id="bikeEditModalTitle">車両情報を編集</h2>
+        <button class="btn-danger modal-close" id="closeBikeEditModalBtn" type="button">閉じる</button>
+      </div>
+
+      <form id="bikeEditForm" class="form-grid">
+        <div>
+          <label for="editBikeName">車両名</label>
+          <input id="editBikeName" required />
+        </div>
+        <div>
+          <label for="editBikeType">カテゴリ</label>
+          <select id="editBikeType">
+            <option>バイク</option>
+            <option>車</option>
+            <option>その他</option>
+          </select>
+        </div>
+        <div>
+          <label for="editBikeMileage">現在走行距離 (km)</label>
+          <input id="editBikeMileage" type="number" min="0" step="1" />
+        </div>
+        <div>
+          <label for="editBikeOilMileage">前回オイル交換距離 (km)</label>
+          <input id="editBikeOilMileage" type="number" min="0" step="1" />
+        </div>
+        <div>
+          <label for="editBikeOilDate">前回オイル交換日</label>
+          <input id="editBikeOilDate" type="date" />
+        </div>
+        <div>
+          <label for="editBikeOilInterval">オイル交換距離目安 (km)</label>
+          <input id="editBikeOilInterval" type="number" min="1" step="1" />
+        </div>
+        <div class="full">
+          <label for="editBikeMemo">メモ</label>
+          <textarea id="editBikeMemo"></textarea>
+        </div>
+        <div class="full modal-actions">
+          <button class="btn-primary" type="submit">保存する</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    const STORAGE_KEY = 'j-garage-manager-v2';
+    const DEFAULT_LOG_TYPES = ['オイル交換', 'タイヤ交換', 'チェーン整備', 'パーツ交換', '点検'];
+
+    const els = {
+      bikeForm: document.getElementById('bikeForm'),
+      bikeName: document.getElementById('bikeName'),
+      bikeType: document.getElementById('bikeType'),
+      bikeMileage: document.getElementById('bikeMileage'),
+      bikeOil: document.getElementById('bikeOil'),
+      bikeMemo: document.getElementById('bikeMemo'),
+      logForm: document.getElementById('logForm'),
+      logBike: document.getElementById('logBike'),
+      logDate: document.getElementById('logDate'),
+      logMileage: document.getElementById('logMileage'),
+      logType: document.getElementById('logType'),
+      logNote: document.getElementById('logNote'),
+      customTypeWrap: document.getElementById('customTypeWrap'),
+      customLogType: document.getElementById('customLogType'),
+      bikeCards: document.getElementById('bikeCards'),
+      logList: document.getElementById('logList'),
+      logFilterBike: document.getElementById('logFilterBike'),
+      searchInput: document.getElementById('searchInput'),
+      sortSelect: document.getElementById('sortSelect'),
+      sampleBtn: document.getElementById('sampleBtn'),
+      exportBtn: document.getElementById('exportBtn'),
+      resetBtn: document.getElementById('resetBtn'),
+      settingsBtn: document.getElementById('settingsBtn'),
+      settingsModal: document.getElementById('settingsModal'),
+      closeSettingsBtn: document.getElementById('closeSettingsBtn'),
+      presetTypeInput: document.getElementById('presetTypeInput'),
+      addPresetTypeBtn: document.getElementById('addPresetTypeBtn'),
+      presetTypeList: document.getElementById('presetTypeList'),
+      memoModal: document.getElementById('memoModal'),
+      memoModalTitle: document.getElementById('memoModalTitle'),
+      memoModalTextarea: document.getElementById('memoModalTextarea'),
+      closeMemoModalBtn: document.getElementById('closeMemoModalBtn'),
+      saveMemoBtn: document.getElementById('saveMemoBtn'),
+      clearMemoBtn: document.getElementById('clearMemoBtn'),
+      bikeEditModal: document.getElementById('bikeEditModal'),
+      bikeEditModalTitle: document.getElementById('bikeEditModalTitle'),
+      closeBikeEditModalBtn: document.getElementById('closeBikeEditModalBtn'),
+      bikeEditForm: document.getElementById('bikeEditForm'),
+      editBikeName: document.getElementById('editBikeName'),
+      editBikeType: document.getElementById('editBikeType'),
+      editBikeMileage: document.getElementById('editBikeMileage'),
+      editBikeOilMileage: document.getElementById('editBikeOilMileage'),
+      editBikeOilDate: document.getElementById('editBikeOilDate'),
+      editBikeOilInterval: document.getElementById('editBikeOilInterval'),
+      editBikeMemo: document.getElementById('editBikeMemo'),
+      importBtn: document.getElementById('importBtn'),
+      importFile: document.getElementById('importFile'),
+      installHelpBtn: document.getElementById('installHelpBtn'),
+      pwaStatus: document.getElementById('pwaStatus')
+    };
+
+    const today = new Date().toISOString().slice(0, 10);
+    els.logDate.value = today;
+
+    let state = load();
+    let editingMemoBikeId = null;
+    let editingBikeId = null;
+    let draggingBikeId = null;
+
+    function normalizeBike(b, index = 0) {
+      return {
+        id: b.id || uid(),
+        name: b.name || '無名車両',
+        type: b.type || 'バイク',
+        mileage: Number(b.mileage || 0),
+        oilMileage: Number(b.oilMileage || 0),
+        oilDate: b.oilDate || '',
+        oilInterval: Number(b.oilInterval || 1000),
+        memo: b.memo || '',
+        order: Number.isFinite(Number(b.order)) ? Number(b.order) : index
+      };
+    }
+
+    function load() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (raw) {
+          const parsed = JSON.parse(raw);
+          return {
+            bikes: Array.isArray(parsed.bikes) ? parsed.bikes.map((b, i) => normalizeBike(b, i)) : [],
+            logs: Array.isArray(parsed.logs) ? parsed.logs : [],
+            customTypes: Array.isArray(parsed.customTypes) ? parsed.customTypes : []
+          };
+        }
+
+        const oldRaw = localStorage.getItem('j-garage-manager-v1');
+        if (oldRaw) {
+          const parsedOld = JSON.parse(oldRaw);
+          return {
+            bikes: Array.isArray(parsedOld.bikes) ? parsedOld.bikes.map((b, i) => normalizeBike(b, i)) : [],
+            logs: Array.isArray(parsedOld.logs) ? parsedOld.logs : [],
+            customTypes: Array.isArray(parsedOld.customTypes) ? parsedOld.customTypes : []
+          };
+        }
+
+        return { bikes: [], logs: [], customTypes: [] };
+      } catch {
+        return { bikes: [], logs: [], customTypes: [] };
+      }
+    }
+
+    function normalizeImportedData(imported) {
+      if (!imported || typeof imported !== 'object') {
+        throw new Error('バックアップデータの形式が違うで。');
+      }
+
+      const bikes = Array.isArray(imported.bikes)
+        ? imported.bikes.map((b, i) => normalizeBike(b, i))
+        : [];
+
+      const validBikeIds = new Set(bikes.map(b => b.id));
+      const logs = Array.isArray(imported.logs)
+        ? imported.logs
+            .filter(log => log && typeof log === 'object')
+            .map(log => ({
+              id: log.id || uid(),
+              bikeId: log.bikeId || '',
+              date: log.date || today,
+              mileage: Number(log.mileage || 0),
+              type: log.type || '点検',
+              note: log.note || ''
+            }))
+            .filter(log => !log.bikeId || validBikeIds.has(log.bikeId))
+        : [];
+
+      const customTypes = Array.isArray(imported.customTypes)
+        ? [...new Set(imported.customTypes.map(t => String(t).trim()).filter(Boolean))]
+        : [];
+
+      bikes.forEach((bike, i) => { bike.order = Number.isFinite(Number(bike.order)) ? Number(bike.order) : i; });
+
+      return { bikes, logs, customTypes };
+    }
+
+    function save() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function uid() {
+      return Math.random().toString(36).slice(2, 10);
+    }
+
+    function escapeHtml(str) {
+      return String(str ?? '').replace(/[&<>"']/g, s => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[s]));
+    }
+
+    function getBikeById(bikeId) {
+      return state.bikes.find(b => b.id === bikeId);
+    }
+
+    function oilRemaining(bike) {
+      const mileage = Number(bike.mileage || 0);
+      const oilAt = Number(bike.oilMileage || 0);
+      const interval = Number(bike.oilInterval || 1000);
+      return interval - (mileage - oilAt);
+    }
+
+    function oilStatus(bike) {
+      const remain = oilRemaining(bike);
+      if (remain <= 0) return { cardClass: 'status-over', badgeClass: 'over', label: '🔴 距離で交換しろ' };
+      if (remain <= 300) return { cardClass: 'status-soon', badgeClass: 'soon', label: '🟡 距離でそろそろ交換' };
+      return { cardClass: 'status-ok', badgeClass: 'ok', label: '🟢 距離は余裕あり' };
+    }
+
+    function lastOilDate(bike) {
+      if (bike.oilDate) return bike.oilDate;
+      const logs = state.logs.filter(l => l.bikeId === bike.id && l.type === 'オイル交換').sort((a, b) => b.date.localeCompare(a.date));
+      return logs.length ? logs[0].date : null;
+    }
+
+    function oilTimeStatus(bike) {
+      const lastDate = lastOilDate(bike);
+      if (!lastDate) return null;
+      const last = new Date(lastDate + 'T00:00:00');
+      const now = new Date();
+      const diffDays = (now - last) / (1000 * 60 * 60 * 24);
+      const limitDays = bike.type === '車' ? 365 : 180;
+      const remain = limitDays - diffDays;
+      if (remain <= 0) return { badgeClass: 'over', label: bike.type === '車' ? '⏰ 1年超えたで' : '⏰ 半年超えたで' };
+      if (remain <= 30) return { badgeClass: 'soon', label: bike.type === '車' ? '⏰ 1年期限近い' : '⏰ 半年期限近い' };
+      return null;
+    }
+
+    function nextOilMileage(bike) {
+      return Number(bike.oilMileage || 0) + Number(bike.oilInterval || 1000);
+    }
+
+    function addMonths(dateString, months) {
+      if (!dateString) return null;
+      const d = new Date(dateString + 'T00:00:00');
+      if (Number.isNaN(d.getTime())) return null;
+      const result = new Date(d);
+      result.setMonth(result.getMonth() + months);
+      return result;
+    }
+
+    function formatDateJP(date) {
+      if (!date || Number.isNaN(date.getTime())) return '未記録';
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
+      return `${y}-${m}-${d}`;
+    }
+
+    function nextOilDate(bike) {
+      const lastDate = lastOilDate(bike);
+      if (!lastDate) return null;
+      return addMonths(lastDate, bike.type === '車' ? 12 : 6);
+    }
+
+    function getAllLogTypes() {
+      return [...DEFAULT_LOG_TYPES, ...state.customTypes, 'その他'];
+    }
+
+    function renderLogTypeOptions(selectedValue = '') {
+      const values = getAllLogTypes();
+      const finalSelected = values.includes(selectedValue) ? selectedValue : DEFAULT_LOG_TYPES[0];
+      els.logType.innerHTML = values.map(type => `<option value="${escapeHtml(type)}" ${type === finalSelected ? 'selected' : ''}>${escapeHtml(type)}</option>`).join('');
+    }
+
+    function toggleCustomTypeInput() {
+      if (els.logType.value === 'その他') {
+        els.customTypeWrap.classList.remove('hidden');
+      } else {
+        els.customTypeWrap.classList.add('hidden');
+        els.customLogType.value = '';
+      }
+    }
+
+    function renderPresetTypeList() {
+      if (!state.customTypes.length) {
+        els.presetTypeList.innerHTML = '<span class="muted">まだ登録なし</span>';
+        return;
+      }
+      els.presetTypeList.innerHTML = state.customTypes.map(type => `
+        <span class="chip">
+          ${escapeHtml(type)}
+          <button type="button" class="btn-danger chip-delete" data-type="${encodeURIComponent(type)}">削除</button>
+        </span>
+      `).join('');
+    }
+
+    function getSortedBikes() {
+      return [...state.bikes].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    }
+
+    function renderBikeOptions() {
+      const options = getSortedBikes().map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`).join('');
+      els.logBike.innerHTML = options || '<option value="">先に設定から車両を追加してや</option>';
+    }
+
+    function renderLogFilterOptions() {
+      const current = els.logFilterBike.value || 'all';
+      const options = [
+        '<option value="all">全車両</option>',
+        '<option value="type:バイク">バイクだけ</option>',
+        '<option value="type:車">車だけ</option>',
+        ...getSortedBikes().map(b => `<option value="${b.id}">${escapeHtml(b.name)}</option>`)
+      ];
+      els.logFilterBike.innerHTML = options.join('');
+      const exists = [...els.logFilterBike.options].some(opt => opt.value === current);
+      els.logFilterBike.value = exists ? current : 'all';
+    }
+
+    function renderBikes() {
+      const q = els.searchInput.value.trim().toLowerCase();
+      const sort = els.sortSelect.value;
+      let bikes = getSortedBikes().filter(b => `${b.name} ${b.type} ${b.memo}`.toLowerCase().includes(q));
+      if (sort === 'name') bikes.sort((a, b) => a.name.localeCompare(b.name, 'ja'));
+      if (sort === 'mileage') bikes.sort((a, b) => Number(b.mileage || 0) - Number(a.mileage || 0));
+      if (sort === 'oilSoon') bikes.sort((a, b) => oilRemaining(a) - oilRemaining(b));
+
+      if (!bikes.length) {
+        els.bikeCards.innerHTML = '<div class="empty">まだ車両がないで。右上の設定から追加したってや。</div>';
+        return;
+      }
+
+      els.bikeCards.innerHTML = bikes.map(bike => {
+        const remain = oilRemaining(bike);
+        const remainText = remain <= 0 ? `交換超過 ${Math.abs(remain)} km` : `あと ${remain} km`;
+        const remainClass = remain <= 300 ? 'danger-text' : 'ok-text';
+        const status = oilStatus(bike);
+        const timeStatus = oilTimeStatus(bike);
+        const nextMileage = nextOilMileage(bike);
+        const lastOil = lastOilDate(bike);
+        const nextDate = nextOilDate(bike);
+        const bikeLogs = state.logs.filter(l => l.bikeId === bike.id).sort((a, b) => b.date.localeCompare(a.date));
+        const lastLog = bikeLogs[0];
+        const draggable = sort === 'custom' && !q;
+
+        return `
+          <article class="bike-card ${status.cardClass}" data-bike-id="${bike.id}" ${draggable ? 'draggable="true"' : ''}>
+            <div class="bike-top">
+              <div>
+                <div class="bike-name">${escapeHtml(bike.name)}</div>
+                <div class="muted">${escapeHtml(bike.type)}</div>
+              </div>
+              <span class="chip ${draggable ? 'drag-chip' : ''}">${draggable ? '↕ 並べ替え' : 'ID'}: ${draggable ? '' : escapeHtml(bike.id)}</span>
+            </div>
+
+            <div class="stat-grid">
+              <div class="stat"><div class="k">現在距離</div><div class="v"><button class="mileage-edit-button" type="button" onclick="startMileageEdit('${bike.id}', this)" title="現在距離を編集">${Number(bike.mileage || 0).toLocaleString()} km</button></div></div>
+              <div class="stat"><div class="k">オイル前回</div><div class="v">${Number(bike.oilMileage || 0).toLocaleString()} km</div></div>
+              <div class="stat"><div class="k">交換目安</div><div class="v ${remainClass}">${remainText}</div></div>
+            </div>
+
+            <div class="muted memo-preview">${escapeHtml(bike.memo || 'メモなし')}</div>
+            <div class="status-badge ${status.badgeClass}">${status.label}</div>
+            ${timeStatus ? `<div class="status-badge ${timeStatus.badgeClass}">${timeStatus.label}</div>` : ''}
+
+            <div class="schedule-box muted">
+              次回交換予定距離: <strong style="color: var(--text);">${nextMileage.toLocaleString()} km</strong><br>
+              前回オイル交換日: <strong style="color: var(--text);">${lastOil ? escapeHtml(lastOil) : '未記録'}</strong><br>
+              次回交換目安日: <strong style="color: var(--text);">${nextDate ? formatDateJP(nextDate) : '未記録'}</strong>
+            </div>
+
+            <div style="margin-top:8px;" class="muted">最近のログ: ${lastLog ? `${escapeHtml(lastLog.date)} / ${escapeHtml(lastLog.type)}` : 'まだなし'}</div>
+
+            <div class="actions">
+              <button class="btn-secondary" onclick="openBikeEditModal('${bike.id}')">車両編集</button>
+              <button class="btn-secondary" onclick="openBikeMemoModal('${bike.id}')">メモ</button>
+              <button class="btn-secondary" onclick="markOil('${bike.id}')">今回をオイル交換距離にする</button>
+              <button class="btn-danger" onclick="deleteBike('${bike.id}')">削除</button>
+            </div>
+          </article>
+        `;
+      }).join('');
+
+      bindDragEvents(sort === 'custom' && !q);
+    }
+
+    function bindDragEvents(enabled) {
+      const cards = [...document.querySelectorAll('.bike-card[data-bike-id]')];
+      if (!enabled) return;
+
+      cards.forEach(card => {
+        card.addEventListener('dragstart', () => {
+          draggingBikeId = card.dataset.bikeId;
+          card.classList.add('dragging');
+        });
+        card.addEventListener('dragend', () => {
+          draggingBikeId = null;
+          card.classList.remove('dragging');
+          cards.forEach(c => c.classList.remove('drag-over'));
+        });
+        card.addEventListener('dragover', (e) => {
+          e.preventDefault();
+          if (!draggingBikeId || draggingBikeId === card.dataset.bikeId) return;
+          cards.forEach(c => c.classList.remove('drag-over'));
+          card.classList.add('drag-over');
+        });
+        card.addEventListener('dragleave', () => {
+          card.classList.remove('drag-over');
+        });
+        card.addEventListener('drop', (e) => {
+          e.preventDefault();
+          const targetBikeId = card.dataset.bikeId;
+          if (!draggingBikeId || draggingBikeId === targetBikeId) return;
+          reorderBikes(draggingBikeId, targetBikeId);
+        });
+      });
+    }
+
+    function reorderBikes(fromId, toId) {
+      const ordered = getSortedBikes();
+      const fromIndex = ordered.findIndex(b => b.id === fromId);
+      const toIndex = ordered.findIndex(b => b.id === toId);
+      if (fromIndex < 0 || toIndex < 0) return;
+      const [moved] = ordered.splice(fromIndex, 1);
+      ordered.splice(toIndex, 0, moved);
+      ordered.forEach((bike, index) => { bike.order = index; });
+      state.bikes = ordered;
+      rerender(false);
+    }
+
+    function renderLogs() {
+      const filter = els.logFilterBike.value || 'all';
+      let logs = [...state.logs];
+
+      if (filter === 'type:バイク') {
+        const bikeIds = state.bikes.filter(b => b.type === 'バイク').map(b => b.id);
+        logs = logs.filter(log => bikeIds.includes(log.bikeId));
+      } else if (filter === 'type:車') {
+        const bikeIds = state.bikes.filter(b => b.type === '車').map(b => b.id);
+        logs = logs.filter(log => bikeIds.includes(log.bikeId));
+      } else if (filter !== 'all') {
+        logs = logs.filter(log => log.bikeId === filter);
+      }
+
+      logs.sort((a, b) => a.date === b.date ? 0 : (a.date < b.date ? 1 : -1));
+
+      if (!logs.length) {
+        els.logList.innerHTML = '<div class="empty">条件に合う整備ログがまだないで。</div>';
+        return;
+      }
+
+      els.logList.innerHTML = logs.map(log => {
+        const bike = getBikeById(log.bikeId);
+        return `
+          <article class="log-item">
+            <div class="log-head">
+              <strong>${escapeHtml(log.type)}</strong>
+              <span class="muted">${escapeHtml(log.date)}</span>
+            </div>
+            <div>${escapeHtml(bike ? bike.name : '削除済み車両')}</div>
+            <div class="muted" style="margin-top:6px;">距離: ${Number(log.mileage || 0).toLocaleString()} km</div>
+            <div style="margin-top:8px; line-height:1.6;">${escapeHtml(log.note || 'メモなし')}</div>
+            <div class="actions"><button class="btn-danger" onclick="deleteLog('${log.id}')">このログを削除</button></div>
+          </article>
+        `;
+      }).join('');
+    }
+
+    function recalcBikeOilData(bikeId) {
+      const bike = getBikeById(bikeId);
+      if (!bike) return;
+      const oilLogs = state.logs
+        .filter(l => l.bikeId === bikeId && l.type === 'オイル交換')
+        .sort((a, b) => b.date.localeCompare(a.date));
+      if (oilLogs.length) {
+        bike.oilMileage = Number(oilLogs[0].mileage || 0);
+        bike.oilDate = oilLogs[0].date || '';
+      }
+    }
+
+    function rerender(saveFirst = true) {
+      if (saveFirst) save();
+      else save();
+      renderBikeOptions();
+      renderLogTypeOptions(els.logType.value || DEFAULT_LOG_TYPES[0]);
+      renderPresetTypeList();
+      renderLogFilterOptions();
+      renderBikes();
+      renderLogs();
+      toggleCustomTypeInput();
+    }
+
+    function resetLogFormToDefault() {
+      els.logForm.reset();
+      els.logDate.value = today;
+      renderLogTypeOptions(DEFAULT_LOG_TYPES[0]);
+      toggleCustomTypeInput();
+    }
+
+    function closeBikeMemoModal() {
+      editingMemoBikeId = null;
+      els.memoModal.classList.add('hidden');
+    }
+
+    function closeBikeEditModal() {
+      editingBikeId = null;
+      els.bikeEditModal.classList.add('hidden');
+    }
+
+    els.settingsBtn.addEventListener('click', () => els.settingsModal.classList.remove('hidden'));
+    els.closeSettingsBtn.addEventListener('click', () => els.settingsModal.classList.add('hidden'));
+    els.settingsModal.addEventListener('click', (e) => { if (e.target === els.settingsModal) els.settingsModal.classList.add('hidden'); });
+
+    els.closeMemoModalBtn.addEventListener('click', closeBikeMemoModal);
+    els.memoModal.addEventListener('click', (e) => { if (e.target === els.memoModal) closeBikeMemoModal(); });
+    els.clearMemoBtn.addEventListener('click', () => { els.memoModalTextarea.value = ''; els.memoModalTextarea.focus(); });
+    els.saveMemoBtn.addEventListener('click', () => {
+      if (!editingMemoBikeId) return;
+      const bike = getBikeById(editingMemoBikeId);
+      if (!bike) return closeBikeMemoModal();
+      bike.memo = els.memoModalTextarea.value.trim();
+      closeBikeMemoModal();
+      rerender();
+    });
+
+    els.closeBikeEditModalBtn.addEventListener('click', closeBikeEditModal);
+    els.bikeEditModal.addEventListener('click', (e) => { if (e.target === els.bikeEditModal) closeBikeEditModal(); });
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key !== 'Escape') return;
+      if (!els.bikeEditModal.classList.contains('hidden')) closeBikeEditModal();
+      else if (!els.memoModal.classList.contains('hidden')) closeBikeMemoModal();
+      else if (!els.settingsModal.classList.contains('hidden')) els.settingsModal.classList.add('hidden');
+    });
+
+    els.logType.addEventListener('change', toggleCustomTypeInput);
+    els.logFilterBike.addEventListener('change', renderLogs);
+
+    els.bikeForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const bike = normalizeBike({
+        id: uid(),
+        name: els.bikeName.value.trim(),
+        type: els.bikeType.value,
+        mileage: Number(els.bikeMileage.value || 0),
+        oilMileage: Number(els.bikeOil.value || 0),
+        oilDate: '',
+        oilInterval: 1000,
+        memo: els.bikeMemo.value.trim(),
+        order: state.bikes.length
+      }, state.bikes.length);
+      if (!bike.name) return;
+      state.bikes.push(bike);
+      els.bikeForm.reset();
+      els.bikeType.value = 'バイク';
+      rerender();
+      els.settingsModal.classList.add('hidden');
+    });
+
+    els.bikeEditForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!editingBikeId) return;
+      const bike = getBikeById(editingBikeId);
+      if (!bike) return;
+      const name = els.editBikeName.value.trim();
+      const mileage = Number(els.editBikeMileage.value || 0);
+      const oilMileage = Number(els.editBikeOilMileage.value || 0);
+      const oilInterval = Number(els.editBikeOilInterval.value || 1000);
+      if (!name) return alert('車両名くらい入れてや。名無しのマシンはロマンじゃなく事故や。');
+      if (!Number.isFinite(mileage) || mileage < 0) return alert('現在走行距離、数字で頼むで。');
+      if (!Number.isFinite(oilMileage) || oilMileage < 0) return alert('前回オイル交換距離、数字で頼むで。');
+      if (!Number.isFinite(oilInterval) || oilInterval <= 0) return alert('交換距離目安まで壊すなや。1以上で入れて。');
+
+      bike.name = name;
+      bike.type = els.editBikeType.value;
+      bike.mileage = mileage;
+      bike.oilMileage = oilMileage;
+      bike.oilDate = els.editBikeOilDate.value || '';
+      bike.oilInterval = oilInterval;
+      bike.memo = els.editBikeMemo.value.trim();
+      closeBikeEditModal();
+      rerender();
+    });
+
+    els.addPresetTypeBtn.addEventListener('click', () => {
+      const value = els.presetTypeInput.value.trim();
+      if (!value) return alert('項目名が空やで。何を登録したいねん。');
+      if (DEFAULT_LOG_TYPES.includes(value) || state.customTypes.includes(value) || value === 'その他') {
+        return alert('その項目はもうあるで。欲張って同じもん増やすなや。');
+      }
+      state.customTypes.push(value);
+      state.customTypes.sort((a, b) => a.localeCompare(b, 'ja'));
+      els.presetTypeInput.value = '';
+      const currentType = els.logType.value;
+      save();
+      renderLogTypeOptions(currentType === 'その他' ? value : currentType);
+      renderPresetTypeList();
+      toggleCustomTypeInput();
+    });
+
+    els.presetTypeList.addEventListener('click', (e) => {
+      const btn = e.target.closest('[data-type]');
+      if (!btn) return;
+      const type = decodeURIComponent(btn.dataset.type);
+      if (!confirm(`${type} を登録項目から削除するで。ええか？`)) return;
+      state.customTypes = state.customTypes.filter(t => t !== type);
+      const currentType = els.logType.value;
+      save();
+      renderLogTypeOptions(currentType === type ? 'その他' : currentType);
+      renderPresetTypeList();
+      toggleCustomTypeInput();
+    });
+
+    els.logForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const bikeId = els.logBike.value;
+      if (!bikeId) return;
+      const selectedType = els.logType.value;
+      const customType = els.customLogType.value.trim();
+      if (selectedType === 'その他' && !customType) {
+        return alert('その他を選んだなら整備項目名も入れてや。そこ空っぽは雑すぎるで。');
+      }
+      const finalType = selectedType === 'その他' && customType ? customType : selectedType;
+      const log = {
+        id: uid(),
+        bikeId,
+        date: els.logDate.value || today,
+        mileage: Number(els.logMileage.value || 0),
+        type: finalType,
+        note: els.logNote.value.trim()
+      };
+      state.logs.push(log);
+      const bike = getBikeById(bikeId);
+      if (bike && Number.isFinite(log.mileage) && log.mileage > bike.mileage) bike.mileage = log.mileage;
+      if (bike && selectedType === 'オイル交換') {
+        if (Number.isFinite(log.mileage) && log.mileage >= 0) bike.oilMileage = log.mileage;
+        bike.oilDate = log.date;
+      }
+      resetLogFormToDefault();
+      rerender();
+    });
+
+    els.searchInput.addEventListener('input', renderBikes);
+    els.sortSelect.addEventListener('change', renderBikes);
+
+    els.sampleBtn.addEventListener('click', () => {
+      if (state.bikes.length && !confirm('今のデータにサンプルを追加するで。ええか？')) return;
+      const base = state.bikes.length;
+      state.bikes.push(
+        normalizeBike({ id: uid(), name: 'Z1000', type: 'バイク', mileage: 18200, oilMileage: 16000, oilDate: '2026-02-20', oilInterval: 1000, memo: 'フルエキ、Power Commander、バブリング寄り', order: base }, base),
+        normalizeBike({ id: uid(), name: 'MT-09 SP', type: 'バイク', mileage: 6200, oilMileage: 4200, oilDate: '2026-01-15', oilInterval: 1000, memo: 'ワインディング主力、S23', order: base + 1 }, base + 1),
+        normalizeBike({ id: uid(), name: 'Z34', type: '車', mileage: 94800, oilMileage: 92000, oilDate: '2025-11-01', oilInterval: 3000, memo: 'SSR、NA、眺めても良し', order: base + 2 }, base + 2)
+      );
+      rerender();
+    });
+
+    els.exportBtn.addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(state, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'j-garage-backup.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
+
+    els.importBtn.addEventListener('click', () => {
+      els.importFile.value = '';
+      els.importFile.click();
+    });
+
+    els.importFile.addEventListener('change', (e) => {
+      const file = e.target.files && e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        try {
+          const imported = JSON.parse(event.target.result);
+          const nextState = normalizeImportedData(imported);
+
+          if (!confirm(`JSONから ${nextState.bikes.length} 台 / ${nextState.logs.length} 件のログを復元するで。今のデータは上書きされる。ええか？`)) {
+            return;
+          }
+
+          state = nextState;
+          save();
+          resetLogFormToDefault();
+          rerender(false);
+          alert('インポート完了！ガレージ記録、無事帰還や。');
+          els.settingsModal.classList.add('hidden');
+        } catch (err) {
+          console.error(err);
+          alert('インポート失敗。JSONファイルが違うか壊れてるっぽいで。');
+        }
+      };
+      reader.onerror = () => alert('ファイル読み込みに失敗したで。');
+      reader.readAsText(file);
+    });
+
+    els.installHelpBtn.addEventListener('click', () => {
+      alert('PWA化は HTTPS か localhost で開いたときに有効やで。スマホならブラウザの「ホーム画面に追加」を使ってな。file:/// 直開きでは基本動かん、そこはブラウザが頑固親父や。');
+    });
+
+    els.resetBtn.addEventListener('click', () => {
+      if (!confirm('全データ削除するで。ほんまにええんか？戻らんで。')) return;
+      state = { bikes: [], logs: [], customTypes: [] };
+      rerender();
+    });
+
+    window.openBikeEditModal = function (bikeId) {
+      const bike = getBikeById(bikeId);
+      if (!bike) return;
+      editingBikeId = bikeId;
+      els.bikeEditModalTitle.textContent = `${bike.name} の車両情報編集`;
+      els.editBikeName.value = bike.name || '';
+      els.editBikeType.value = bike.type || 'バイク';
+      els.editBikeMileage.value = Number(bike.mileage || 0);
+      els.editBikeOilMileage.value = Number(bike.oilMileage || 0);
+      els.editBikeOilDate.value = bike.oilDate || '';
+      els.editBikeOilInterval.value = Number(bike.oilInterval || 1000);
+      els.editBikeMemo.value = bike.memo || '';
+      els.bikeEditModal.classList.remove('hidden');
+      els.editBikeName.focus();
+    };
+
+    window.openBikeMemoModal = function (bikeId) {
+      const bike = getBikeById(bikeId);
+      if (!bike) return;
+      editingMemoBikeId = bikeId;
+      els.memoModalTitle.textContent = `${bike.name} のメモ`;
+      els.memoModalTextarea.value = bike.memo || '';
+      els.memoModal.classList.remove('hidden');
+      els.memoModalTextarea.focus();
+    };
+
+    window.startMileageEdit = function (bikeId, button) {
+      const bike = getBikeById(bikeId);
+      const wrap = button?.closest('.v');
+      if (!bike || !wrap || wrap.querySelector('.mileage-edit-input')) return;
+      button.closest('.stat')?.classList.add('mileage-editing');
+
+      wrap.innerHTML = `
+        <div class="mileage-edit-row">
+          <input class="mileage-edit-input" type="number" min="0" step="1" value="${Number(bike.mileage || 0)}" aria-label="現在距離を編集">
+          <span class="mileage-unit">km</span>
+        </div>
+      `;
+
+      const input = wrap.querySelector('.mileage-edit-input');
+      input.focus();
+      input.select();
+
+      let finished = false;
+      const finish = (shouldSave) => {
+        if (finished) return;
+        finished = true;
+
+        if (!shouldSave) {
+          renderBikes();
+          return;
+        }
+
+        const mileage = Number(input.value || 0);
+        if (!Number.isFinite(mileage) || mileage < 0) {
+          alert('現在走行距離、数字で頼むで。');
+          renderBikes();
+          return;
+        }
+
+        bike.mileage = mileage;
+        rerender();
+      };
+
+      input.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') finish(true);
+        if (e.key === 'Escape') finish(false);
+      });
+      input.addEventListener('blur', () => finish(true));
+    };
+
+    window.markOil = function (bikeId) {
+      const bike = getBikeById(bikeId);
+      if (!bike) return;
+      bike.oilMileage = bike.mileage;
+      bike.oilDate = today;
+      state.logs.push({ id: uid(), bikeId, date: today, mileage: bike.mileage, type: 'オイル交換', note: '車両カードからオイル交換距離を更新' });
+      rerender();
+    };
+
+    window.deleteLog = function (logId) {
+      const log = state.logs.find(l => l.id === logId);
+      if (!log) return;
+      const bike = getBikeById(log.bikeId);
+      const bikeName = bike ? bike.name : '削除済み車両';
+      if (!confirm(`${bikeName} / ${log.date} / ${log.type} のログを削除するで。ほんまにええか？`)) return;
+      const bikeId = log.bikeId;
+      state.logs = state.logs.filter(l => l.id !== logId);
+      recalcBikeOilData(bikeId);
+      rerender();
+    };
+
+    window.deleteBike = function (bikeId) {
+      const bike = getBikeById(bikeId);
+      if (!bike) return;
+      if (!confirm(`${bike.name} を削除するで。関連ログも全部消える。ほんまにええか？`)) return;
+      state.bikes = state.bikes.filter(b => b.id !== bikeId);
+      state.logs = state.logs.filter(l => l.bikeId !== bikeId);
+      state.bikes.forEach((b, i) => { b.order = i; });
+      rerender();
+    };
+
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('./service-worker.js')
+          .then(() => {
+            if (els.pwaStatus) els.pwaStatus.textContent = 'PWA対応: service worker 登録済み';
+          })
+          .catch(() => {
+            if (els.pwaStatus) els.pwaStatus.textContent = 'PWA対応: HTTPS / localhost で開くと有効';
+          });
+      });
+    } else if (els.pwaStatus) {
+      els.pwaStatus.textContent = 'PWA対応: このブラウザは未対応';
+    }
+
+    rerender();
+  </script>
+  <script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-app.js";
+import { getFirestore, doc, setDoc, getDoc, collection, addDoc, getDocs } from "https://www.gstatic.com/firebasejs/12.0.0/firebase-firestore.js";
+
+const firebaseConfig = {  apiKey: "AIzaSyC5h7Nt8mjGjvVZjz-kAvAlCtwRPds3QlQ",
+  authDomain: "j-garage-manager.firebaseapp.com",
+  projectId: "j-garage-manager",
+  storageBucket: "j-garage-manager.firebasestorage.app",
+  messagingSenderId: "549106996959",
+  appId: "1:549106996959:web:bb3ebfe464da40f8ca7b6a"
+};
+
+window.firebaseApp = initializeApp(firebaseConfig);
+window.db = getFirestore(window.firebaseApp);
+
+console.log("Firebase Connected!");
+    window.saveToCloud = async function() {
+  if (!confirm("現在のブラウザ保存データをクラウドへ上書き保存するで。ええか？")) return;
+
+  try {
+    await setDoc(
+      doc(window.db, "garage", "main"),
+      state
+    );
+
+    console.log("Cloud Save OK");
+    alert("クラウド保存完了！");
+  } catch (e) {
+    console.error("Cloud Save Error", e);
+  }
+};
+
+window.loadFromCloud = async function() {
+  if (!confirm("クラウドのデータを読み込むで。今のブラウザ保存データは上書きされる。ええか？")) return;
+
+  try {
+    const snap = await getDoc(
+      doc(window.db, "garage", "main")
+    );
+
+    if (snap.exists()) {
+const cloudState = snap.data();
+
+state.bikes = Array.isArray(cloudState.bikes) ? cloudState.bikes : [];
+state.logs = Array.isArray(cloudState.logs) ? cloudState.logs : [];
+state.customTypes = Array.isArray(cloudState.customTypes) ? cloudState.customTypes : [];
+      localStorage.setItem(
+        "j-garage-manager-v2",
+        JSON.stringify(state)
+      );
+
+      alert("クラウド読込完了！");
+      location.reload();
+    } else {
+      alert("クラウドデータが見つからんで");
+      console.log("Cloud Data Not Found");
+    }
+  } catch (e) {
+    console.error("Cloud Load Error", e);
+    alert("クラウド読込失敗");
+  }
+};
+
+</script>
+</body>
+</html>
